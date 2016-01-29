@@ -3,9 +3,6 @@ var searchIndex;
 function search() {
   var searchText = $("#search").val();
 
-  console.log("Searching for " + searchText);
-
-
   $(".project-tile").each(function(obj) {
     $(obj).data("score", $(obj).data("id"));
   });
@@ -16,11 +13,8 @@ function search() {
   }
 
   var results = searchIndex.search(searchText);
-  console.log(results);
-
   for(var i = 0; i < results.length; i++) {
     var res = results[i];
-    console.log("Setting " + res.ref + " score to " + res.score);
     $('*[data-id="' + res.ref + '"]').data('score', res.score);
   }
 
@@ -41,9 +35,24 @@ function search() {
   });
 }
 
+function categoryFilter(text) {
+  $('#search').val(text);
+
+  $(".project-tile").each(function(obj) {
+    $(obj).data("score", $(obj).data("id"));
+  });
+
+  $('#project-list').isotope('updateSortData').isotope();
+
+  $('#project-list').isotope({
+    sortBy: 'weight',
+    filter: function() {
+      return $(this).data("category") == text;
+    }
+  });
+}
+
 function populateProjects(data) {
-  console.log(data);
-  
   searchIndex = lunr(function () {
     this.field('name', { boost: 10 });
     this.field('solutionStatement', { boost: 7 });
@@ -61,19 +70,37 @@ function populateProjects(data) {
   var source   = $("#project-template").html();
   var template = Handlebars.compile(source);
 
+  var categories = {};
+  var tags = {};
+
   for(project of data) {
     var html = template(project);
     $("#project-list").append(html);
     searchIndex.add(project);
+    categories[project.category] = "";
+    $.each(project.tags, function(i, tag) { tags[tag] = "" });
+    $.merge(tags, project.tags);
   }
+
+  categories = Object.keys(categories);
+  tags = Object.keys(tags);
+
+  $.each(categories, function(i, category) {
+    var side = i < (Math.floor(categories.length / 2)) ? 0 : 1;
+    var list = $('#categories').find('ul')[side];
+
+    $(list).append("<li><a class='category-search' href='#'>" + category + "</a></li>");
+  });
+
+  $('.category-search').click(function() { categoryFilter($(this).text()); });
 
   $('#project-list').isotope({
     itemSelector: '.project-tile',
     sortAscending: false,
     layoutMode: 'fitRows',
+    layoutMode: 'vertical',
     getSortData: {
       weight: function( itemElem ) {
-        console.log("Weighting ", $(itemElem).data("id"), " with ", $(itemElem).data("score"));
         return parseFloat( $( itemElem ).data("score") ) * 100;
       }
     }
