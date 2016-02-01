@@ -80,10 +80,10 @@
 
     filters = document.getElementById('categories-box').filters;
 
-    showStations();
+    showStations(true);
   }
 
-  function showStations() {
+  function showStations(resize) {
     // first collect all of the checked boxes and create an array of strings
     // like ['green', 'blue']
     var list = [];
@@ -107,6 +107,10 @@
         clusterGroup.addLayer(layer);
       }
     });
+
+    if(resize) {
+      map.fitBounds(clusterGroup.getBounds());
+    }
   }
 
   function normalizeHeaders(element) {
