@@ -64,7 +64,7 @@
         "properties": {
           "category": row.category,
           "title": row.name,
-          "description": "155 9th St, San Francisco",
+          "description": row.location,
           "marker-color": "#fc4353",
           "marker-symbol": iconMapping(row.category)
         }
@@ -97,13 +97,9 @@
     // create a new marker group
     var clusterGroup = new L.MarkerClusterGroup().addTo(overlays);
     
-    console.log(list);
-
     // and add any markers that fit the filtered criteria to that group.
     markers.eachLayer(function(layer) {
-      console.log(layer.feature.properties.category);
       if (list.indexOf(layer.feature.properties.category) !== -1) {
-        console.log("Adding to ClusterGroup: ", layer);
         clusterGroup.addLayer(layer);
       }
     });
