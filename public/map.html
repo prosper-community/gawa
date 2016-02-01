@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset=utf-8 />
+  <title></title>
+  
+  <script src='https://api.tiles.mapbox.com/mapbox.js/v2.2.4/mapbox.js'></script>
+  <script src="//code.jquery.com/jquery-1.12.0.min.js"></script>
+  <script src="/bower_components/tabletop/src/tabletop.js"></script>
+  <script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-markercluster/v0.4.0/leaflet.markercluster.js'></script>
+
+  <link href='https://api.mapbox.com/mapbox.js/plugins/leaflet-markercluster/v0.4.0/MarkerCluster.css' rel='stylesheet' />
+  <link href='https://api.mapbox.com/mapbox.js/plugins/leaflet-markercluster/v0.4.0/MarkerCluster.Default.css' rel='stylesheet' /> 
+  <link href='https://api.tiles.mapbox.com/mapbox.js/v2.2.4/mapbox.css' rel='stylesheet' />
+  <style>
+    body { margin:0; padding:0; }
+    .map { position:absolute; top:0; bottom:0; width:100%; }
+  </style>
+</head>
+<body>
+<div id='map' class='map'> </div>
+<script>
+  L.mapbox.accessToken = 'pk.eyJ1IjoiYm9iYnJleiIsImEiOiJjaWszMzI2bTgwM2o3dTZtMGhsczBiYWhpIn0.SUrlm0_dsGYDf0Xtam6vXA';
+  
+  var map = L.mapbox.map('map')
+                              .setView([37.8, -96], 1)
+                              .addLayer(L.mapbox.tileLayer('mapbox.streets'));
+  
+  var markers = L.mapbox.featureLayer().addTo(map);
+
+  // Set a custom icon on each marker based on feature properties.
+  markers.on('layeradd', function(e) {
+    var marker = e.layer,
+      feature = marker.feature;
+    var content = '<h2>'+ feature.properties.title+'<\/h2>';
+    marker.bindPopup(content);
+  });
+  
+  Tabletop.init( { 
+    key: '1-IEzHfWIAhzSIDxpwHJQurQQrcZR4s3jCuj8AvRJBvY',
+    simpleSheet: true,
+    prettyColumnNames: false,
+    postProcess: normalizeHeaders,
+    callback: function(data) { 
+      var geojson = [];
+
+      $.each(data, function(i, row) {
+        console.log(i, row, row.latitude);
+        if(isNaN(parseFloat(row.latitude)))
+          return;
+
+        geojson.push( {
+          "type": "Feature",
+          "geometry": {
+            "type": "Point",
+            "coordinates": [row.longitude, row.latitude]
+          },
+          "properties": {
+            "title": row.name,
+            "description": "155 9th St, San Francisco",
+            "marker-color": "#fc4353",
+            "marker-symbol": iconMapping(row.category)
+          }
+        });
+      });
+
+      console.log(geojson); 
+      markers.setGeoJSON(geojson);
+    }
+  });
+ 
+  map.scrollWheelZoom.disable();
+
+
+  function normalizeHeaders(element) {
+  element["id"] = element["rowNumber"];
+  element["addedAt"] = Date.parse( element["timestamp"] );
+  element["authorName"] = element["whatisyourfullname"];
+  element["authorEmail"] = element["whatisyouremailaddress"];
+  element["name"] = element["whatisthenameoftheproject"];
+  element["url"] = element["whatistheprojectswebsiteifapplicable"];
+  element["location"] = element["whereisthisprojectlocated"];
+  element["problemStatement"] = element["whatistheproblemthatthisprojectsolves"];
+  element["solutionStatement"] = element["whatisthisprojectssolution"];
+  element["isFundraising"] = coerceToBool(element["doyouknowifthisprojectiscurrentlyfundraising"]);
+  element["isContactInformationAvailable"] = coerceToBool(element["doyouknowofanycontactinformationforthisproject"]);
+  element["category"] = element["whichcategorybestdescribesthisproject"];
+  element["tags"] = String(element["whichtagsbestdescribethisproject"]).split(", ");
+  element["twitterUrl"] = element["ifthisprojecthasatwitterprofilewhatistheurl"];
+  element["isSubOrganization"] = coerceToBool(element["istheprojectapartofabiggerorganization"]);
+  element["isAdditionalDetails"] = coerceToBool(element["isthereanyadditionalinformationyoudliketoprovide"]);
+  element["facebookUrl"] = element["ifthisprojecthasafacebookpagewhatistheurl"];
+  element["needsVolunteers"] = coerceToBool(element["doyouknowifthisprojectneedsvolunteers"]);
+  element["nameAndEmailProvided"] = coerceToBool(element["wouldyouliketoprovideuswithyournameandemailaddress"]);
+  element["hasSocialMedia"] = coerceToBool(element["doyouknowifthisprojecthasanysocialmediaaccounts"]);
+  element["linkedinUrl"] = element["ifthisprojecthasalinkedinpagewhatistheurl"];
+  element["additionalInformation"] = element["whatistheadditionalinformationyoudliketoprovide"];
+  element["donationStatement"] = element["whatisthebestwaytodonatetotheproject"];
+  element["donationMethod"] = element["whatisthecategoryofthedonationmethodyouprovidedabove"];
+  element["bestContactMethod"] = element["whatisthebestwaytocontacttheproject"];
+  element["contactCategory"] = element["whatisthecategorythatdescribesthecontactinformationyouprovidedabove"];
+  element["volunteerType"] = element["whatkindofvolunteersdoesthisprojectneed"];
+  element["parentOrganization"] = element["whatisthenameoftheorganizationwhichrunstheproject"];
+  
+  delete element["timestamp"];
+  delete element["whatisyourfullname"];
+  delete element["whatisyouremailaddress"];
+  delete element["whatisthenameoftheproject"];
+  delete element["whatistheprojectswebsiteifapplicable"];
+  delete element["whereisthisprojectlocated"];
+  delete element["whatistheproblemthatthisprojectsolves"];
+  delete element["whatisthisprojectssolution"];
+  delete element["doyouknowifthisprojectiscurrentlyfundraising"];
+  delete element["doyouknowofanycontactinformationforthisproject"];
+  delete element["whichcategorybestdescribesthisproject"];
+  delete element["whichtagsbestdescribethisproject"];
+  delete element["ifthisprojecthasatwitterprofilewhatistheurl"];
+  delete element["istheprojectapartofabiggerorganization"];
+  delete element["isthereanyadditionalinformationyoudliketoprovide"];
+  delete element["ifthisprojecthasafacebookpagewhatistheurl"];
+  delete element["doyouknowifthisprojectneedsvolunteers"];
+  delete element["wouldyouliketoprovideuswithyournameandemailaddress"];
+  delete element["doyouknowifthisprojecthasanysocialmediaaccounts"];
+  delete element["ifthisprojecthasalinkedinpagewhatistheurl"];
+  delete element["whatistheadditionalinformationyoudliketoprovide"];
+  delete element["whatisthebestwaytodonatetotheproject"];
+  delete element["whatisthecategoryofthedonationmethodyouprovidedabove"];
+  delete element["whatisthebestwaytocontacttheproject"];
+  delete element["whatisthecategorythatdescribesthecontactinformationyouprovidedabove"];
+  delete element["whatkindofvolunteersdoesthisprojectneed"];
+  delete element["whatisthenameoftheorganizationwhichrunstheproject"];
+}
+
+function coerceToBool(obj) {
+  return String(obj).toLowerCase() == "yes";
+}
+
+function iconMapping(category) {
+  mappings = { 
+    "Legal" : "town-hall",
+    "Housing" : "lodging",
+    "Emergency Aid" : "hospital", 
+    "Health" : "hospital",
+    "Communication" : "mobilephone",
+    "Social Integration" : "city",
+    "Non-Emergency Aid" : "suitcase",
+    "Coordination" : "school",
+    "Education" : "college",
+    "Basic needs" :  "restaurant",
+    "Humanitarian Aid" : "pharmacy"
+  }
+  return mappings[category] || "";
+}
+
+</script>
+</body>
+</html>
