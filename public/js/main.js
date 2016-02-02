@@ -9,10 +9,13 @@ function search() {
 
   if(searchText.replace(/ /g,'') == "" ) {
     $('#project-list').isotope({ filter: '*' });
+    mixpanel.track("search", { "action" : "reset", "query" : null });
     return;
   }
 
   var results = searchIndex.search(searchText);
+  mixpanel.track("search", { "action" : "search", "query" : searchText, "result_count" : results.length });
+
   for(var i = 0; i < results.length; i++) {
     var res = results[i];
     $('*[data-id="' + res.ref + '"]').data('score', res.score);
@@ -37,6 +40,8 @@ function search() {
 
 function categoryFilter(text) {
   $('#search').val(text);
+
+  mixpanel.track("search", { "action" : "category-filter", "category" : text });
 
   $(".project-tile").each(function(obj) {
     $(obj).data("score", $(obj).data("id"));
@@ -104,6 +109,19 @@ function populateProjects(data) {
         return parseFloat( $( itemElem ).data("score") ) * 100;
       }
     }
+  });
+
+  $(".project-tile").each(function(i, tile) {
+    $(tile).find('a').click(function(e) {
+      console.log(e.target.href);
+      mixpanel.track("clicked", { "target" : e.currentTarget.href, 
+                                  "text" : e.currentTarget.text,
+                                  "type" : $(e.currentTarget).data("type"),
+                                  "project_id" : $(tile).data("id"),
+                                  "project_category" : $(tile).data("category"),
+                                  "project_tags" : $(tile).data("tags")
+      });
+    });
   });
 }
 
@@ -181,3 +199,5 @@ $(function() {
 
   $("#search").on('input', search);
 });
+
+mixpanel.track("loaded");
