@@ -137,7 +137,7 @@ function normalizeHeaders(element) {
   element["solutionStatement"] = element["whatisthisprojectssolution"];
   element["isFundraising"] = coerceToBool(element["doyouknowifthisprojectiscurrentlyfundraising"]);
   element["isContactInformationAvailable"] = coerceToBool(element["doyouknowofanycontactinformationforthisproject"]);
-  element["category"] = element["whichcategorybestdescribesthisproject"];
+  element["category"] = element["whichsinglecategorybestdescribesthisproject"];
   element["tags"] = String(element["whichtagsbestdescribethisproject"]).split(", ");
   element["twitterUrl"] = element["ifthisprojecthasatwitterprofilewhatistheurl"];
   element["isSubOrganization"] = coerceToBool(element["istheprojectapartofabiggerorganization"]);
@@ -165,7 +165,7 @@ function normalizeHeaders(element) {
   delete element["whatisthisprojectssolution"];
   delete element["doyouknowifthisprojectiscurrentlyfundraising"];
   delete element["doyouknowofanycontactinformationforthisproject"];
-  delete element["whichcategorybestdescribesthisproject"];
+  delete element["whichsinglecategorybestdescribesthisproject"];
   delete element["whichtagsbestdescribethisproject"];
   delete element["ifthisprojecthasatwitterprofilewhatistheurl"];
   delete element["istheprojectapartofabiggerorganization"];
