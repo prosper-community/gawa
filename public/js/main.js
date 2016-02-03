@@ -78,14 +78,14 @@ function populateProjects(data) {
   var categories = {};
   var tags = {};
 
-  for(project of data) {
+  data.forEach(function(project) {
     var html = template(project);
     $("#project-list").append(html);
     searchIndex.add(project);
     categories[project.category] = "";
     $.each(project.tags, function(i, tag) { tags[tag] = "" });
     $.merge(tags, project.tags);
-  }
+  });
 
   categories = Object.keys(categories);
   tags = Object.keys(tags);
